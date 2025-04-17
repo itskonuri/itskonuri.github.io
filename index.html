@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>목표 타수 타자 연습기</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
+    textarea, input, button { width: 100%; margin: 0.5rem 0; }
+    #testText { padding: 1rem; background: #f0f0f0; white-space: pre-wrap; }
+    #result { margin-top: 1rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>목표 타수 설정</h1>
+  
+  <label>목표 타수(키스트로크):</label>
+  <input type="number" id="targetStrokes" value="600" min="1" />
+  
+  <label>문장 선택</label>
+  <select id="presetSelect">
+    <option value="0">— 예시 문장 선택 —</option>
+    <option value="1">“봄이 오면 꽃이 피고 새들이 노래한다.”</option>
+    <option value="2">“한글은 과학적인 글자 체계로 알려져 있다.”</option>
+    <option value="3">“오늘의 날씨는 맑고 기온은 18도입니다.”</option>
+  </select>
+  
+  <label>혹은 직접 입력</label>
+  <textarea id="customText" rows="3" placeholder="직접 쓰고 싶은 문장을 입력하세요."></textarea>
+  
+  <button id="startBtn">연습 시작</button>
+  
+  <div id="testText"></div>
+  <textarea id="inputArea" rows="5" placeholder="여기에 타이핑하세요…" disabled></textarea>
+  
+  <div id="result"></div>
+
+  <script>
+    const presets = {
+      1: '봄이 오면 꽃이 피고 새들이 노래한다.',
+      2: '한글은 과학적인 글자 체계로 알려져 있다.',
+      3: '오늘의 날씨는 맑고 기온은 18도입니다.'
+    };
+    let startTime, strokeCount, target;
+    
+    document.getElementById('startBtn').onclick = () => {
+      // 1) 목표값 세팅
+      target = parseInt(document.getElementById('targetStrokes').value, 10) || 0;
+      if (target <= 0) return alert('목표 타수를 1 이상으로 설정해주세요.');
+      
+      // 2) 텍스트 결정
+      const sel = document.getElementById('presetSelect').value;
+      const txt = sel && presets[sel]
+                ? presets[sel]
+                : document.getElementById('customText').value.trim();
+      if (!txt) return alert('예시를 선택하거나 직접 문장을 입력하세요.');
+      
+      // 3) UI 초기화
+      document.getElementById('testText').textContent = txt;
+      const input = document.getElementById('inputArea');
+      input.value = '';
+      input.disabled = false;
+      input.focus();
+      document.getElementById('result').textContent = '';
+      
+      // 4) 카운터 & 시간 초기화
+      strokeCount = 0;
+      startTime = performance.now();
+    };
+    
+    document.getElementById('inputArea').addEventListener('keydown', e => {
+      // 백스페이스 등 제외하려면 e.key.length === 1 같은 필터를 추가해도 됩니다.
+      strokeCount++;
+      if (strokeCount >= target) {
+        const elapsedMs = performance.now() - startTime;
+        const elapsedMin = elapsedMs / 1000 / 60;
+        const strokesPerMin = (strokeCount / elapsedMin).toFixed(1);
+        const wpm = (strokesPerMin / 5).toFixed(1);
+        
+        document.getElementById('result').innerHTML =
+          `⏱ 걸린 시간: ${(elapsedMs/1000).toFixed(1)}초<br>` +
+          `⌨️ 타수 속도: ${strokesPerMin} keystrokes/min<br>` +
+          `📄 환산 WPM: ${wpm} 단어/분`;
+        
+        // 자동 종료
+        e.target.disabled = true;
+      }
+    });
+  </script>
+
+</body>
+</html>
